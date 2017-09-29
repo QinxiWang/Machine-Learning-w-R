@@ -1,0 +1,141 @@
+# Topic 8 Exercises: Tree-based models
+###Qinxi Wang
+
+Assignment:
+
+    programming: 8.4.12
+    theory: In §8.4 problems 1, 2, 3, 4, and 5
+
+###8.4.12
+```{r}
+library(ISLR)
+library(gbm)
+library(randomForest)
+set.seed(1)
+train <- sample(nrow(Weekly), nrow(Weekly) / 2)
+Weekly$Direction <- ifelse(Weekly$Direction == "Up", 1, 0)
+Weekly.train <- Weekly[train, ]
+Weekly.test <- Weekly[-train, ]
+```
+
+####boost
+```{r}
+boost.fit <- gbm(Direction ~ . - Year - Today, data = Weekly.train, distribution = "bernoulli", n.trees = 5000)
+boost.probs <- predict(boost.fit, newdata = Weekly.test, n.trees = 5000)
+boost.pred <- ifelse(boost.probs > 0.5, 1, 0)
+```
+
+
+####bagging
+```{r}
+bag.fit <- randomForest(Direction ~ . - Year - Today, data = Weekly.train, mtry = 6)
+bag.probs <- predict(bag.fit, newdata = Weekly.test)
+bag.pred <- ifelse(bag.probs > 0.5, 1, 0)
+```
+
+
+####random forest
+```{r}
+rf.fit <- randomForest(Direction ~ . - Year - Today, data = Weekly.train, mtry = 2)
+rf.probs <- predict(rf.fit, newdata = Weekly.test)
+rf.pred <- ifelse(rf.probs > 0.5, 1, 0)
+```
+
+
+####bagging
+```{r}
+bag.fit <- randomForest(Direction ~ . - Year - Today, data = Weekly.train, mtry = 6)
+bag.probs <- predict(bag.fit, newdata = Weekly.test)
+bag.pred <- ifelse(bag.probs > 0.5, 1, 0)
+```
+
+
+####random forest
+```{r}
+rf.fit <- randomForest(Direction ~ . - Year - Today, data = Weekly.train, mtry = 2)
+rf.probs <- predict(rf.fit, newdata = Weekly.test)
+rf.pred <- ifelse(rf.probs > 0.5, 1, 0)
+```
+
+
+####logistic
+```{r}
+logit.fit <- glm(Direction ~ . - Year - Today, data = Weekly.train, family = "binomial")
+logit.probs <- predict(logit.fit, newdata = Weekly.test, type = "response")
+logit.pred <- ifelse(logit.probs > 0.5, 1, 0)
+```
+
+####result comparison
+```{r}
+table(Weekly.test$Direction, logit.pred)
+table(Weekly.test$Direction, boost.pred)
+table(Weekly.test$Direction, bag.pred)
+table(Weekly.test$Direction, rf.pred)
+```
+
+
+###8.4.1
+```{r}
+par(xpd = NA)
+plot(NA, NA, type = "n", xlim = c(0,100), ylim = c(0,100), xlab = "X", ylab = "Y")
+
+lines(x = c(40,40), y = c(0,100))
+lines(x = c(0,40), y = c(75,75))
+lines(x = c(75,75), y = c(0,100))
+lines(x = c(20,20), y = c(0,75))
+lines(x = c(75,100), y = c(25,25))
+
+text(x = (40+75)/2, y = 50, labels = c("R1"))
+text(x = 20, y = (100+75)/2, labels = c("R2"))
+text(x = (75+100)/2, y = (100+25)/2, labels = c("R3"))
+text(x = (75+100)/2, y = 25/2, labels = c("R4"))
+text(x = 30, y = 75/2, labels = c("R5"))
+text(x = 10, y = 75/2, labels = c("R6"))
+```
+
+
+####8.4.2
+```
+Boosting using depth-one trees (or stumps) leads to an additive model because as outlined in algorithm 8.2, we have a 1/c(fi(xi)) at each step i to maximize the fit to the residuals , thus the coff cancels out and finally we have the additive model like the one in the notation.
+```
+
+
+####8.4.3
+```{r}
+p <- seq(0, 1, 0.01)
+gini.index <- 2 * p * (1 - p)
+class.error <- 1 - pmax(p, 1 - p)
+cross.entropy <- - (p * log(p) + (1 - p) * log(1 - p))
+matplot(p, cbind(gini.index, class.error, cross.entropy))
+```
+
+
+####8.4.4
+```
+(a)
+If X1≥1 then 5, else if X2≥1 then 15, else if X1<0 then 3, else if X2<0 then 10, else 0.
+```
+####(b)
+```{r}
+par(xpd = NA)
+plot(NA, NA, type = "n", xlim = c(-2, 2), ylim = c(-3, 3), xlab = "X1", ylab = "X2")
+lines(x = c(-2, 2), y = c(1, 1))
+lines(x = c(-2, 2), y = c(2, 2))
+lines(x = c(1, 1), y = c(-3, 1))
+lines(x = c(0, 0), y = c(1, 2))
+
+text(x = (-2 + 1)/2, y = -1, labels = c(-1.8))
+text(x = 1.5, y = -1, labels = c(0.63))
+text(x = 0, y = 2.5, labels = c(2.49))
+text(x = -1, y = 1.5, labels = c(-1.06))
+text(x = 1, y = 1.5, labels = c(0.21))
+```
+
+
+####8.4.5
+```
+For the majority vote approach, the final classification should be based on the produced 10 estimates of P(Class is Red|X) and consider the majority among them. For the second approach to classify based on the average probability, the final classification should be based on the mean probability, such as x>mean(10 estimators).
+```
+
+
+

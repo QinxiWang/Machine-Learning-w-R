@@ -1,0 +1,114 @@
+# Topic 6 Exercises: Selecting Model Terms
+## Qinxi Wang
+Assignment:
+
+    Theory 6.8.1, 6.8.2.
+    Applied, 6.8.9
+
+###6.8.1
+```
+(a) When performing best subset selection, the model with k predictors is the model with the smallest RSS among all the k choose p models with k predictors. If we do forward selection, the model with k predictors is the model with the smallest RSS among the p−k models which adds on one additional predictor. If we perform backward selection, the model with k predictors is the model with the smallest RSS among the k models which contains all but one of the p+1 predictors. So the answer should be from best subset selection.
+
+(b) For testing data,  we cannot infer which of the three models with k predictors has the smallest test RSS without knowing further how well the model fits the data, since the test RSS depends the result of applying the model on the test data set which we can't conclude without actually simulate it, also the output would defer every time given a different test data set.
+
+
+(c)
+i.   T. The predictors in the k-variable model identified by forward stepwise are a subset of the predictors in the k+1 variable model identified by forward stepwise selection, plus the best aditional feature.
+
+ii.  T. The k variable model contains all but one feature in the k+1 best model, minus the single feature resulting in the smallest gain in RSS.
+
+iii. F. There is no direct link between the models obtained from forward and backward selection. It is possible for disjoint sets to be identified by forward and backward selection.
+
+iv.  F. Same as above.
+
+v.   F. Since the two method would not choose exact the same k+1 features, the two subsets generated might be disjoint.
+```
+
+
+###6.8.2
+```
+(a) lasso relative to least squares would be less flexible and will give improved prediction accuracy when its increase in bias is less than its decrease in variance. Because lasso has a lower probability of overfitting the model.
+
+(b) ridge regression relative to least squares would be less flexible and will give improved prediction accuracy when its increase in bias is less than its decrease in variance. Same as above.
+
+(c) non-linear methods relative to least squares would be more flexible and will give improved prediction accuracy when their increase in variance are less than their decrease in bias. Non linear methods are generally more flexible than least squares, but have a higher chance of overfitting the model.
+```
+
+###6.8.9
+```{r}
+library(ISLR)
+data(College)
+library(pls)
+library(glmnet)
+```
+###(a)
+```{r}
+set.seed(1)
+train = sample(c(TRUE,FALSE),nrow(College),rep=TRUE)
+test = (!train)
+College.train = College[train,]
+College.test = College[test,]
+```
+
+###(b)
+```{r}
+#linear model
+fit.lm <- lm(Apps ~ ., data = College.train)
+pred.lm <- predict(fit.lm, College.test)
+rss=sum((pred.lm-College.test$Apps)^2)
+```
+The test error obtained is 573164960.
+
+###(c)
+```{r}
+#ridge regression model
+train.mat <- model.matrix(Apps ~ ., data = College.train)
+test.mat <- model.matrix(Apps ~ ., data = College.test)
+grid <- 10 ^ seq(4, -2, length = 100)
+fit.ridge <- glmnet(train.mat, College.train$Apps, alpha = 0, lambda = grid, thresh = 1e-12)
+cv.ridge <- cv.glmnet(train.mat, College.train$Apps, alpha = 0, lambda = grid, thresh = 1e-12)
+bestlam.ridge <- cv.ridge$lambda.min
+pred.ridge <- predict(fit.ridge, s = bestlam.ridge, newx = test.mat)
+mean((pred.ridge - College.test$Apps)^2)
+```
+The test error obtained is 1664103.
+
+###(d)
+```{r}
+#lasso model
+fit.lasso <- glmnet(train.mat, College.train$Apps, alpha = 1, lambda = grid, thresh = 1e-12)
+cv.lasso <- cv.glmnet(train.mat, College.train$Apps, alpha = 1, lambda = grid, thresh = 1e-12)
+bestlam.lasso <- cv.lasso$lambda.min
+pred.lasso <- predict(fit.lasso, s = bestlam.lasso, newx = test.mat)
+mean((pred.lasso - College.test$Apps)^2)
+```
+The test error obtained is 1615301.
+
+
+###(e)
+```{r}
+#PCR model
+fit.pcr <- pcr(Apps ~ ., data = College.train, scale = TRUE, validation = "CV")
+validationplot(fit.pcr, val.type = "MSEP")
+pred.pcr <- predict(fit.pcr, College.test, ncomp = 10)
+mean((pred.pcr - College.test$Apps)^2)
+```
+The test error obtained is 3142295.
+
+
+###(f)
+```{r}
+#PLS model
+fit.pls <- plsr(Apps ~ ., data = College.train, scale = TRUE, validation = "CV")
+validationplot(fit.pls, val.type = "MSEP")
+pred.pls <- predict(fit.pls, College.test, ncomp = 10)
+mean((pred.pls - College.test$Apps)^2)
+```
+The test error is 1538778.
+
+
+###(g)
+```
+It appears that the PLS model performs the best, however all the other models all perform much better than the linear one. The overall accuracy for prediction is not that high among all these models.
+```
+

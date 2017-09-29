@@ -1,0 +1,305 @@
+# Topic 4 Exercises: Classification
+### Qinxi Wang
+
+```
+Topic 4 Assignment:
+    Programming Assignment: 4.7.11, 4.7.13
+    Theory assignment: 4.7.1, 4.7.8, 4.7.9
+```    
+    
+```{r}
+library(ISLR)
+#attach(Auto)
+library(MASS)
+library(class)
+#attach(Boston)
+```
+
+
+####4.7.11
+#####(a)
+```{r}
+Auto$mpg01 = ifelse(Auto$mpg > median(Auto$mpg), 1 ,0)
+#Auto2 = data.frame(Auto, mpg01)
+```
+
+#####(b)
+```{r}
+names(Auto) 
+
+# Scatterplots
+plot(mpg01 ~ mpg, data = Auto)
+plot(mpg01 ~ cylinders, data = Auto)
+plot(mpg01 ~ displacement, data = Auto)
+plot(mpg01 ~ weight, data = Auto)
+plot(mpg01 ~ acceleration, data = Auto)
+plot(mpg01 ~ year, data = Auto ) #year, mpg01)
+plot(mpg01 ~ horsepower, data = Auto) #horsepower, mpg01)
+
+#Boxplots
+boxplot(cylinders ~ mpg01, data = Auto)
+boxplot(displacement ~ mpg01, data = Auto)
+boxplot(horsepower ~ mpg01, data = Auto)
+boxplot(weight ~ mpg01,data = Auto)
+boxplot(acceleration ~ mpg01, data = Auto)
+boxplot(year ~ mpg01, data = Auto)
+```
+It appears that there exists some association between mpg01 and cylinders, horsepower, displacement, weight, and acceleration.
+
+
+#####(c) & (d)
+```{r}
+k = 10
+method = lda
+data = Auto
+response <- "mpg01"
+sets = (1:nrow(data) %% k) + 1
+table = list()
+means = rep(0, k)
+for (i in 1:k){
+    For_Testing = data[sets==i,]
+    For_Training = data[sets!=i,]
+    Response_Test = data[[response]][sets==i]
+    mod_LDA_one <- lda(mpg01 ~ cylinders + weight + displacement + horsepower + acceleration, 
+                       data = For_Training)
+    test_LDA_one <- predict(mod_LDA_one, newdata = For_Testing)
+    
+    table[[i]] = table(test_LDA_one$class, Response_Test)  
+    means[i] = mean(test_LDA_one$class != Response_Test)
+}
+mean(means)
+```
+The test error of the model obtained from using the five factors in b) using LDA is 10.95%.
+
+#####(e)
+```{r}
+#QDA
+k = 10
+data = Auto
+response <- "mpg01"
+sets = (1:nrow(data) %% k) + 1
+table2 = list()
+means2 = rep(0, k)
+for (i in 1:k){
+    For_Testing = data[sets==i,]
+    For_Training = data[sets!=i,]
+    Response_Test = data[[response]][sets==i]
+    mod_QDA_one <- qda(mpg01 ~ cylinders + weight + displacement + horsepower + acceleration, 
+                       data = For_Training)
+    test_QDA_one <- predict(mod_QDA_one, newdata = For_Testing)
+    
+    table2[[i]] = table(test_QDA_one$class, Response_Test)  
+    means2[i] = mean(test_QDA_one$class != Response_Test)
+}
+mean(means2)
+```
+The test error of the model obtained from using the five factors in b) using QDA is 10.44%.
+
+
+#####(f)
+```{r}
+#Logistic Regression
+k = 10
+data = Auto
+response <- "mpg01"
+sets = (1:nrow(data) %% k) + 1
+table3 = list()
+means3 = rep(0, k)
+for (i in 1:k){
+    For_Testing = data[sets==i,]
+    For_Training = data[sets!=i,]
+    Response_Test = data[[response]][sets==i]
+    log_reg <- glm(mpg01 ~ cylinders + weight + displacement + horsepower + acceleration, 
+                       data = For_Training)
+    test_log_reg = ifelse(predict(log_reg, newdata = For_Testing) > 0.5, 1, 0)
+    table3[[i]] = table(test_log_reg, Response_Test)  
+    means3[i] = mean(test_log_reg != Response_Test)
+}
+mean(means3)
+```
+The test error of the model obtained from using the five factors in b) using Logistic Regression is 10.95%.
+
+#####(f)
+```{r}
+#KNN
+keepers <- c("cylinders", "weight", "displacement", "horsepower", "acceleration")
+k = 10
+data = Auto
+response <- "mpg01"
+sets = (1:nrow(data) %% k) + 1
+table4 = list()
+means4 = rep(0, k)
+for (i in 1:k){
+    For_Testing = data[sets==i,]
+    For_Training = data[sets!=i,]
+    Response_Test = data[[response]][sets==i]
+    KNN_train = For_Training[keepers]
+    KNN_test = For_Testing[keepers]
+    pred_KNN = knn(KNN_train, KNN_test, For_Training$mpg01, k=6) #try different k values
+    table4[[i]] = table(pred_KNN, Response_Test)  
+    means4[i] = mean(pred_KNN != Response_Test)
+}
+mean(means4)
+```
+The test error of the model obtained from using the five factors in b) using KNN with k = 1 is 13.24%.
+The test error of the model obtained from using the five factors in b) using KNN with k = 2 is 14.51%.
+The test error of the model obtained from using the five factors in b) using KNN with k = 3 is 12.23%.
+The test error of the model obtained from using the five factors in b) using KNN with k = 4 is 12.47%.
+The test error of the model obtained from using the five factors in b) using KNN with k = 5 is 11.96%...
+The test error of the model starts to increaase after k >= 6.
+The value of K seems to be 5 in order to perform the best on this data set.
+
+###4.7.13
+#### Using the Boston data set, fit classification models in order to predict whether a given suburb has a crime rate above or below the median. Explore logistic regression, LDA, and KNN models using various sub- sets of the predictors. Describe your findings.
+```{r}
+Boston$crim01 = ifelse(Boston$crim > median(Boston$crim), 1 ,0)
+names(Boston)
+```
+
+```{r}
+#LDA
+k = 10
+data = Boston
+response <- "crim01"
+sets = (1:nrow(data) %% k) + 1
+table_1 = list()
+means_1 = rep(0, k)
+for (i in 1:k){
+    For_Testing = data[sets==i,]
+    For_Training = data[sets!=i,]
+    Response_Test = data[[response]][sets==i]
+    mod_LDA <- lda(crim01~lstat+rm+zn+nox+dis+rad+ptratio+black+medv+age+chas+indus+tax, data = 
+                         For_Training)
+    test_LDA <- predict(mod_LDA, newdata = For_Testing)
+    
+    table_1[[i]] = table(test_LDA$class, Response_Test)  
+    means_1[i] = mean(test_LDA$class != Response_Test)
+}
+mean(means_1)
+```
+The error rate using LDA is 14.18%.
+
+
+
+```{r}
+#QDA
+k = 10
+data = Boston
+response <- "crim01"
+sets = (1:nrow(data) %% k) + 1
+table_2 = list()
+means_2 = rep(0, k)
+for (i in 1:k){
+    For_Testing = data[sets==i,]
+    For_Training = data[sets!=i,]
+    Response_Test = data[[response]][sets==i]
+    mod_QDA <- qda(crim01~lstat+rm+zn+nox+dis+rad+ptratio+black+medv+age+chas+indus+tax, data = 
+                         For_Training)
+    test_QDA <- predict(mod_QDA, newdata = For_Testing)
+    
+    table_2[[i]] = table(test_QDA$class, Response_Test)  
+    means_2[i] = mean(test_QDA$class != Response_Test)
+}
+mean(means_2)
+```
+The error rate using QDA is 10.49%.
+
+
+```{r}
+#Logistic Regression
+data = Boston
+response <- "crim01"
+sets = (1:nrow(data) %% k) + 1
+table_3 = list()
+means_3 = rep(0, k)
+for (i in 1:k){
+    For_Testing = data[sets==i,]
+    For_Training = data[sets!=i,]
+    Response_Test = data[[response]][sets==i]
+    log_reg <- glm(crim01~lstat+rm+zn+nox+dis+rad+ptratio+black+medv+age+chas+indus+tax, data = 
+                         For_Training)
+    test_log_reg = ifelse(predict(log_reg, newdata = For_Testing) > 0.5, 1, 0)
+    table_3[[i]] = table(test_log_reg, Response_Test)  
+    means_3[i] = mean(test_log_reg != Response_Test)
+}
+mean(means_3)
+```
+The error rate using Logistic Regression is 14.82%.
+
+
+
+```{r}
+#KNN
+keepers <- c("lstat", "rm", "zn", "nox", "dis", "rad", "ptratio", "black", "medv","age","chas", "indus","tax")
+k = 10
+data = Boston
+response <- "crim01"
+sets = (1:nrow(data) %% k) + 1
+table_4 = list()
+means_4 = rep(0, k)
+for (i in 1:k){
+    For_Testing = data[sets==i,]
+    For_Training = data[sets!=i,]
+    Response_Test = data[[response]][sets==i]
+    KNN_train_4 = For_Training[keepers]
+    KNN_test_4 = For_Testing[keepers]
+    pred_KNN_4 = knn(KNN_train_4, KNN_test_4, For_Training$crim01, k=4) #try different k values
+    table_4[[i]] = table(pred_KNN_4, Response_Test)  
+    means_4[i] = mean(pred_KNN_4 != Response_Test)
+}
+mean(means_4)
+```
+Error rate:
+k = 1:  7.33%
+k = 2:  7.92%
+k = 3:  7.52%
+And the error rate grows larger as we increase the k. 
+
+Combining the four models we have been applying: we can see that performance wise: KNN k=1 > KNN k=3 > k=2 > QDA > LDA > Log_regression. 
+
+
+
+####4.7.1
+```
+4.2: 
+p(X) = eβ0 +β1 X / 1 + eβ0+β1X
+
+4.3:
+p(X) /  1−p(X) = eβ0+β1X 
+
+Answer:
+Based on 4.2: P(x) = (eβ0 +β1 X / 1 + eβ0+β1X)
+                   = eβ0+β1X(1 / ( 1/ eβ0+β1X) + 1)
+                   = eβ0+β1X(1−p(X))
+              which gives us 4.3 if we move (1−p(X)) to the left hand side.
+```
+
+
+####4.7.8
+```
+Based on these results, we should prefer to use logistic regression for classification of new observations because KNN with k = 1 would only return the nearest neighbor each time, thus would not mis-classify any data in the training data, which implies a training error rate of 0%. Yet weget an average error rate (averaged over both test and training data sets) of 18%. Since we used logistic regression and get an error rate of 20 % on the training data and 30 % on the test data, the k=1 error rate 18% implies 18% /0.5(because the test and train data is of the same size) = 36% error rate, and we compare it to the corresponding logistic regression - the former is worse. Thus we should prefer to use logistic regression.
+```
+
+
+
+####4.7.9
+```
+(a)
+based on 4.3 we have:               p(X) / 1−p(X) = 0.37
+
+which we can write in the following format according to 4.2:
+                                    p(X) =0.37 / 1+0.37 = 0.27. 
+
+
+About 27% of the people with an odds of 0.37 of defaulting on their credit card payment will in fact default.
+
+
+(b)
+Same as the reverse in a):
+
+if p(X) = 0.16, then p(X) / 1-p(X) = 0.16 / 1-0.16 = 0.19
+
+The odds that she will default is 19% in this case.
+```
+
+

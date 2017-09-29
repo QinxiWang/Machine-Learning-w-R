@@ -1,0 +1,98 @@
+# Topic 7 Exercises: Nonlinear regression
+## Qinxi Wang
+
+Assignment:
+
+    programming: 7.9.11
+    theory: in §7.9 problems 3, 4, and 5
+
+###7.9.11
+####(a)
+```{r}
+n = 100
+set.seed(10)
+X1 = rnorm(n)
+X2 = rnorm(n)
+Y = rnorm(n)
+```
+
+####(b)
+```{r}
+beta1 = 0.4
+```
+
+####(c)
+```{r}
+a = Y-beta1*X1
+beta2=lm(a~X2)$coef[2]
+```
+
+####(d)
+```{r}
+a = Y - beta2*X2
+beta1=lm(a~X1)$coef[2]
+```
+
+####(e)
+```{r}
+b0 = 1
+e = 0.1
+Y = X1*beta1+X2*beta2+b0+e
+
+res=matrix(NA,3,1000,dimnames=list(c("C0","C1","C2"),paste(1:1000)))
+
+for(i in seq(1000)){
+  a = Y-beta1*X1
+  b2=lm(a~X2)$coef[2]
+  a = Y - beta2*X2
+  b1=lm(a~X1)$coef[2]
+  res["C0",i]=b0
+  res["C1",i]=b1
+  res["C2",i]=b2
+}
+
+res[,c(1,2,3,4,5,6,7,8,9,1000), drop=F]
+
+r=range(res)
+plot(seq(1000),res[1,],type="l",lwd=3,ylim=r,col="blue",xlab="iteration",ylab="coefficient estimate")
+lines(res[2,],lwd=3,col="tomato")
+lines(res[3,],lwd=3,col="green")
+```
+
+####(f)
+```{r}
+#plot.new()
+fit=lm(Y~X1+X2)
+plot(fit)
+abline(h=fit$coef[1],lty=3,lwd=1,col="blue")
+abline(h=fit$coef[2],lty=3,lwd=1,col="red")
+abline(h=fit$coef[3],lty=3,lwd=1,col="green")
+```
+
+####(g)
+```
+Three iteration results were required.
+```
+
+###7.9.3
+```{r}
+x = -2:2
+y = 1 + x + -2 * (x-1)^2 * I(x>1)
+plot(x, y)
+```
+
+###7.9.4
+```{r}
+x = -2:2
+y = c(1,1,2,2,1)
+plot(x,y)
+```
+
+###7.9.5
+```
+(a) g2, which has a higher order polynomial.
+
+(b) probably g1, since its less likely to overfit the model.
+
+(c) g1 = g2 when evealuating errors.
+```
