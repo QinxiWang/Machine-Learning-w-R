@@ -1,0 +1,44 @@
+# In-Class Programming Activity, Day 13
+
+Your work goes here ...
+```{r}
+k_fold1 = function(formula=mpg ~ hp + wt+am, method = lm, data = mtcars, prefun = predict, k = 10){
+  sets = (1:nrow(data) %% k) + 1  #the eg assumes that there are 51 rows in the data
+  mspe = numeric(k)
+  for (i in 1:k){
+      For_Testing = data[sets==i,]
+      For_Training = data[sets!=i,]
+      mod = lm(formula, data = For_Training)
+      output = predict(mod, newdata = For_Testing)
+      mspe[i] = mean((output - For_Testing[["mpg"]])^2)
+  }
+  mean(mspe)
+}
+
+k_fold1()
+```
+
+```{r}
+k_fold = function(formula, method = lm, data, predfun = predict, k = 10){
+  sets = (1:nrow(data) %% k) + 1  #the eg assumes that there are 51 rows in the data
+  mspe = numeric(k)
+  for (i in 1:k){
+      For_Testing = data[sets==i,]
+      For_Training = data[sets!=i,]
+      mod = method(formula, data = For_Training)
+      output = predfun(mod, newdata = For_Testing)
+      mspe[i] = mean((output - For_Testing[[as.character(formula[[2]])]])^2)
+  }
+  mean(mspe)
+}
+
+k_fold(formula = mpg ~ hp + wt + am, data = mtcars)
+```
+
+
+
+## Test statements
+
+```{r}
+scoreActivity::score253(13)
+```

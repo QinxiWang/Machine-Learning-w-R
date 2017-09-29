@@ -1,0 +1,51 @@
+# In-Class Programming Activity, Day 14
+#Shrinkage and out_of-sample prediction error
+
+```{r}
+library(glmnet)
+GenCont = read.csv("http://tiny.cc/dcf/GenCont.csv")
+# y = Phenotypes
+# x = SNP1-12
+```
+
+```{r}
+compare_ols_ridge = function(responses, predictors, lambda = 1){
+  sets = (1:nrow(GenCont) %% 2) + 1
+ 
+    train_set_res = responses[sets == 1]
+    train_set_pre = predictors[sets == 1,]
+    test_set_res = responses[sets == 2]
+    test_set_pre = predictors[sets == 2,]
+    
+    mod1 = lm(train_set_res~as.matrix(train_set_pre))
+    mod2 = glmnet(as.matrix(train_set_pre), train_set_res, alpha = 0, lambda = lambda)
+    mod1_output_in = predict(mod1, newdata = train_set_pre)
+    mod1_output_out = predict(mod1, newdata = test_set_pre)
+    mod2_output_in = predict(mod2, s =0, newx = as.matrix(train_set_pre))
+    mod2_output_out = predict(mod2, s =0, newx = as.matrix(test_set_pre))
+    
+    ols_in = mean((mod1_output_in - train_set_res)^2)
+    ols_out = mean((mod1_output_out - test_set_res)^2)
+    ridge_in = mean((mod2_output_in - train_set_res)^2)
+    ridge_out = mean((mod2_output_out - test_set_res)^2)
+    
+  return(c(lambda = lambda, ols_in = ols_in, ridge_in = ridge_in, ols_out = ols_out, ridge_out = ridge_out))
+}
+
+#set.seed(1)
+Shrink_results = compare_ols_ridge(GenCont[,1], GenCont[,2:13], lambda = 1)
+```
+
+```{r}
+Shrink_results2 = compare_ols_ridge(GenCont[,1], GenCont[,2:13], lambda = 0.1)
+Shrink_results3 = compare_ols_ridge(GenCont[,1], GenCont[,2:13], lambda = 0)
+Shrink_results4 = compare_ols_ridge(GenCont[,1], GenCont[,2:13], lambda = 10)
+Shrink_results5 = compare_ols_ridge(GenCont[,1], GenCont[,2:13], lambda = 100)
+```
+
+
+## Test statements
+
+```{r}
+scoreActivity::score253(14) 
+```
