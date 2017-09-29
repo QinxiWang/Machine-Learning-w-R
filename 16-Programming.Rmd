@@ -1,0 +1,85 @@
+# In-Class Programming Activity, Day 16
+
+```{r}
+my_knots = function(x,k){
+  quantile(x, probs = seq(1/(k+1), k/(k+1), 1/(k+1)))
+}
+```
+
+
+```{r}
+spline_model_matrix = function(x, knot_locations){
+  MM <- cbind(1, x, x^2, x^3)
+  for (i in 1:length(knot_locations)){
+    new_vector = pmax(0, (x - knot_locations[i])^3)
+    MM = cbind(MM, new_vector)
+  }
+  return(MM)
+}
+
+spline_model_matrix( 1:10, c(2, 5, 8))
+```
+
+```{r}
+#spline_coefs = coef(lm(y~MM))
+```
+
+
+```{r}
+fit_spline = function(formula, k = 2, data = parent.frame()){
+  y = eval(formula[[2]], envir = data)
+  x = eval(formula[[3]], envir = data)
+  knot_locations = my_knots(x,k)
+  MM = spline_model_matrix(x, knot_locations)
+  mod = lm(y~MM-1)
+  res = list(coef = coef(mod), knots = knot_locations, cov = vcov(mod), rse = sd(resid(mod)))
+  class(res) = "my_spline"
+  
+  return(res)
+}
+```
+
+```{r}
+predict.my_spline1 = function(mod, newx, level = 0.95, intervals = c("none", "confidence", "prediction")){
+  intervals = match.arg(intervals)
+  MM= spline_model_matrix(newx, mod$knots)
+  vals = MM %*% mod$coef
+  se = sqrt(rowSums(MM %*% mod$cov *MM))
+  if(intervals == "none") return(vals)
+  else return(NULL)
+}
+```
+
+```{r}
+predict.my_spline2 = function(mod, newx, level = 0.95, intervals = "confidence"){
+  intervals = match.arg(intervals)
+  MM= spline_model_matrix(newx, mod$knots)
+  vals = MM %*% mod$coef
+  se = sqrt(rowSums(MM %*% mod$cov *MM))
+  upper = vals + 2*se
+  lower = vals - 2*se
+  if(intervals == "none") return(c(vals, upper, lower))
+  else return(NULL)
+}
+```
+
+```{r}
+predict.my_spline = function(mod, newx, level = 0.95, intervals = "prediction"){
+  intervals = match.arg(intervals)
+  MM= spline_model_matrix(newx, mod$knots)
+  vals = MM %*% mod$coef
+  se = sqrt(rowSums(MM %*% mod$cov *MM))
+  upper = vals + 2*se
+  lower = vals - 2*se
+  rse = sqrt(se^2 + mod$rse^2)
+  if(intervals == "none") return(c(vals, upper, lower))
+  else return(NULL)
+}
+```
+
+
+## Test statements
+
+```{r}
+#scoreActivity::score253(16)
+```

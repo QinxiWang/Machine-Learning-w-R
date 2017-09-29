@@ -1,0 +1,142 @@
+####Team Xenopterygii
+####Qinxi Wang, Maritza Steele
+####MATH 253 Project
+####Fall 2016 
+
+```{r cache=TRUE}
+library(readr)
+library(h2o)
+library(caret)
+library(randomForest)
+train = read.csv("~/Downloads/train.csv")
+cat(sprintf("Training set has %d rows and %d columns\n", nrow(train), ncol(train)))
+test = read.csv("~/Downloads/test.csv")
+cat(sprintf("Test set has %d rows and %d columns\n", nrow(test), ncol(test)))
+```
+
+    Our client is chief executive officer of a prestigious data processing company that has, due to a recent electronic mail scandal, taken a fall in the public eye. While the status of the emails are in review, the company is interested in communicating by sending handwritten notes containing encrypted messages to and from different company sectors. However, our client has found difficulty in reading and interpreting the handwritten numerical characters of the messages because of unique variance in penmanship. Despite their position as CEO of this company, our client does not know how to utilize machine learning techniques to solve this issue. Therefore, we have been hired to create a model that can determine the likelihood that a written digit, from 0 to 9, has appeared.
+
+
+    The ability to correctly interpret a digit is crucial for the success of our client’s new communication method. Therefore, we would like to predict a digit with no less than 95% accuracy, as determined by our Kaggle™ group analysis.
+    
+    The data set contained no missing instances. The training data set, (train.csv), has 785 columns. The first column, called "label", is the digit that was drawn. The rest of the columns contain the pixel-values of the associated image.The response variable, therefore, was the number labeled corresponding to the associated digit present in the image. Training and testing data was available on the Kaggle website: https://www.kaggle.com/c/digit-recognizer/data.
+
+     We did not have particular predictor variables available, however, we did work with matrices that represent gray-scale images of hand-drawn digits, from zero through nine. Each image is 28x28 pixels, for a total of 784 pixels. Each pixel has a single value associated with it, with higher numbers meaning darker color. This pixel-value is an integer between 0 and 255, inclusive. We plotted out a few example of the image for the train data for better illustration:
+
+```{r cache=TRUE}
+# Create a 28*28 matrix with pixel color values
+m = matrix(unlist(train[10,-1]), nrow = 28, byrow = TRUE)
+ 
+#image(m,col=grey.colors(255))
+rotate <- function(x) t(apply(x, 2, rev)) 
+ 
+par(mfrow=c(2,3))
+lapply(1:6, 
+       function(x) image(
+         rotate(matrix(unlist(train[x,-1]),nrow = 28, byrow = TRUE)),
+         col=grey.colors(255),
+         xlab=train[x,1]
+       )
+)
+ 
+par(mfrow=c(1,1)) #set plot options back to default
+```
+
+      We applied the deep learning package in R called h2o, and the random forest classification method in order to address this problem. 
+      
+      In our deep learning approach, the basic meta-parameters at play are weights and biases attached to each neuron. However, due to the nature of neural network approach, the full connectivity between neurons in the current and previous layer, the receptive field would automatically tune the weights assigned to each cell. 
+      
+      We split the original training dataset into two sets. We used 80% of the original train dataset and feed that into our deep learning model as the new training data, and used the rest 20% to test the degree of fitness of our trained model. The deep learning model achieve 8083 total number of correct prediction for the training.
+
+
+```{r cache=TRUE}
+inTrain<- createDataPartition(train$label, p=0.8, list=FALSE)
+training<-train[inTrain,]
+testing<-train[-inTrain,]
+write.csv(training, file = "~/train-data.csv", row.names = FALSE) 
+write.csv(testing, file = "~/test-data.csv", row.names = FALSE)
+```
+
+(Commented out the code for no repetition in training purposes)
+
+```
+local.h2o = h2o.init(ip = "localhost", port = 54321, startH2O = TRUE, nthreads=-1)
+trainlocal = read.csv("~/train-data.csv") 
+testlocal  = read.csv("~/test-data.csv")
+ 
+#convert digit labels to factor for classification
+training[,1] = as.factor(training[,1])
+ 
+
+traindata = as.h2o(training)
+testdata = as.h2o(testing)
+#train_model = h2o.deeplearning(x = 2:785, y = 1, traindata, activation = "Tanh", hidden=rep(160,5), epochs = 20)
+
+#use the trained model to predict testing dataset
+model_pred = h2o.predict(object=train_model, newdata=testdata[,-1])
+deeplearn_df = as.data.frame(model_pred)
+
+test_labels = testing[,1]
+sum(diag(table(test_labels,deeplearn_df[,1])))   #number of correct prediction for the training
+
+test_h2o = as.h2o(test)
+test_pred = h2o.predict(object = train_model, newdata = test_h2o[,-1])
+model_pred_test = as.data.frame(test_pred)
+
+model_pred_test = data.frame(ImageId = seq(1,length(model_pred_test$predict)), Label = model_pred_test$predict)
+write.csv(model_pred_test, file = "~/test-result.csv", row.names=FALSE)
+ 
+#shut down virtual H2O cluster
+h2o.shutdown(prompt = FALSE)
+```
+
+
+    In our random forest approach, we set the number of training to be 10000 steps, and varying the number of trees to be 5, 10, 15, 20, 25, 30 and 40. We can see that the rate of accuracy increases as we grow more trees in our algorithm, but after 25 trees the improvement becomes quite slow.
+
+
+```{r cache=TRUE}
+set.seed(0)
+numTrain <- 10000
+numTrees <- 50
+
+rows = sample(1:nrow(train), numTrain)
+labels = as.factor(train[rows,]$label)
+trainrf = train[rows,-1]
+
+rf = randomForest(trainrf, labels, xtest=test, ntree=numTrees)
+predictions = data.frame(ImageId=1:nrow(test), Label=levels(labels)[rf$test$predicted])
+
+write_csv(predictions, "~/rf-result50.csv") 
+```
+
+  We also plotted out the graph of accuracy vs. numTree for our random forrest algorithm:
+  
+```
+<div id="bg">
+  <img src"~/Desktop/50.png" alt="">
+</div>
+```
+
+
+    Since either the forward or backward piecewise model selection would fit into our project scope as we are dealing with image as matrices input, we applied random forest in its most  We did not apply cross validation to our random forest algorithm given the simple nature of the task: to recognize and classify digits from 0 to 9. Thus, the most important parameters to the result would be the number of trees. In the randomForest package we used in R, the algorithm starts by first measure the variable importance based on our train dataset, and fit the random forest model based on the number of trees we desired. Through each iteration of training, the score of importance for each feature gets updated based on the previous evaluation of the average of the difference in out-of-bag error from the permutation over the number of trees in the forest.
+
+
+    Our goal was to create a model that could learn characteristics of a numerical character and predict which digit has been presented. Our utilization of deep learning techniques resulted in a predictive accuracy of 96.3% according to the Kaggle™ community. This exceeds our minimum of 95% accepted accuracy. In addition, we attempted to solve our problem at hand by employing random forest classification methods. When we performed this classification using a varying number of trees. As the number of trees increased, we saw a subtle increase in accuracy from 87.13% with 5 trees and 94.23% with 50 trees. We can see that the increase of accuracy would no longer grow as fast as the number of trees increase. In order to test it out, we tried 500 trees and the result does not improve as much:
+    
+```
+<div id="bg">
+  <img src"~/Desktop/500.png" alt="">
+</div>
+``` 
+
+
+    This remained under our desired minimum accuracy. For this reason, we believe that our deep learning model results meaningfully address the our purposes, but our random forest classification does not. However, it is important to compare the benefits of each method.
+    
+    
+      We can see that the deep learning approach for our digit classification task demonstrates a better accuracy in comparison to the random forest algorithm. However, there exists a run-time and accuracy trade off between these two algorithms we investigated. The deep learning model is capable of learning more sophisticated models, which allows the result to be more holistic, as opposed to traditional local detection techniques that can only focus on a small subset of the model representation. Nevertheless, it is also a very computationally intensive model to deploy.
+      
+      On the other hand, random forest proposes a much faster approach. Not only is it faster than neural network training, but it is also faster than local detector algorithms such as K-nearest neighbors and bagging due to its randomness in the greedy decision tree learning process. We decided to develop the tree ensemble methods not only because it is a relatively simple model to understand and easy to tune as opposed to a support vector machine, but also due to relatively large number of classification we have to perform on each category, 10 digits. Yet the accuracy is also limited due to the algorithm’s tendency to overfit the data in instances where trees are used in excess.
+      
+      
+      Deep learning definitely performs well in the general application of image classifications, and in our case it indeed meets our original goal of 95% accuracy. Since we are not dealing with a huge dataset, SVM might also demonstrate a similar accuracy result, but it is also inefficient to train. The deep learning approach would definitely outperform other linear or logistic methods for binary classification. We can improve the accuracy of our deep learning model by performing k-folds cross validation, tune the shape of the filters, and change the number of layers or even adopt a more complex model such as CNN or RNN. Even so, these methods may not be necessary given the complexity of the task. Reinforcement techniques can also be applied along with the model training in order to maximize the optimal solution search.
+

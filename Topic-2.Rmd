@@ -1,0 +1,247 @@
+# Topic 2 Exercises: Linear Regression
+## Qinxi Wang
+## Oct 5
+```
+    Computing
+        work through §3.6. 
+        (Style catastrophe: Although the book uses attach(), it is bad practice to do so. Ask about alternatives!)
+        Problem 13 in ISL 3.7.13.
+    Theory
+        Reading questions.
+            On p. 66 the authors state, “This is clearly not true in Fig. 3.1” Explain why.
+            On p. 77 the authors state, “In this case we cannot even fit the multiple regression models using least squares ….” Explain why.
+        ISL 3.7.3 and 3.7.4.
+```
+
+### Computing
+
+#### §3.6
+```{r}
+#6.7
+LoadLibraries = function (){
+library(ISLR)
+library(MASS)
+library(car)
+print("The libraries have been loaded.")
+}
+#library(MASS)
+#library(ISLR)
+LoadLibraries()
+#library(car)
+```
+
+```{r}
+#6.2
+#fix(Boston)
+names(Boston)
+
+lm.fit=lm(medv ~ lstat ,data=Boston)
+attach(Boston)
+lm.fit=lm(medv ~ lstat)
+lm.fit
+
+summary(lm.fit)
+names(lm.fit)
+
+confint(lm.fit)
+predict(lm.fit,data.frame(lstat=(c(5,10,15))), interval ="confidence")
+
+plot(lstat ,medv, col = "tomato")
+abline(lm.fit, col="red")
+
+abline(lm.fit,lwd=3)
+abline(lm.fit,lwd=3,col="red") > plot(lstat,medv,col="red")
+plot(lstat,medv,pch=20)
+plot(lstat,medv,pch="+")
+plot(1:20,1:20,pch=1:20)
+
+
+par(mfrow=c(2,2))
+plot(lm.fit)
+
+plot(predict(lm.fit), residuals(lm.fit))
+plot(predict(lm.fit), rstudent(lm.fit))
+
+plot(hatvalues (lm.fit))
+which.max(hatvalues (lm.fit))   # identifies the index of the largest element of a vector
+
+
+#6.3
+lm.fit=lm(medv~lstat+age,data=Boston)
+summary(lm.fit)
+
+lm.fit=lm(medv~.,data=Boston)
+summary(lm.fit)
+
+vif(lm.fit)
+
+lm.fit1=lm(medv~.-age,data=Boston)
+summary(lm.fit1)
+lm.fit1=update(lm.fit, ~.-age)
+summary(lm.fit1)
+
+
+
+#6.4  Interaction Terms
+summary(lm(medv~lstat*age,data=Boston))
+
+#6.5 Non-linear Transformations of the Predictors
+lm.fit2=lm(medv~lstat+I(lstat^2))
+summary(lm.fit2)
+lm.fit=lm(medv~lstat)
+anova(lm.fit ,lm.fit2)
+
+
+par(mfrow=c(2,2))
+plot(lm.fit2)
+
+lm.fit5=lm(medv~poly(lstat ,5))
+summary(lm.fit5)
+summary(lm(medv~log(rm),data=Boston))
+
+
+#6.6  Qualitative Predictors
+#fix(Carseats)
+names(Carseats)
+lm.fit=lm(Sales~.+Income:Advertising+Price:Age,data=Carseats)
+summary(lm.fit)
+
+attach(Carseats)
+contrasts(ShelveLoc)  #returns the coding that R uses for the dummy variables
+```
+
+
+#### 3.7.13
+```{r}
+#(a)
+set.seed(1)
+x = rnorm(100)
+(x)
+#(b)
+(eps = rnorm(100, sd = sqrt(0.25)))
+```
+
+```{r}
+#(c)
+y = -1 + 0.5 * x + eps
+length(y)
+```
+#### (c)The length is 100, beta-0 is -1, beta-1 is 0.5.
+
+
+```{r}
+#(d)
+plot(x, y, asp = 1)
+```
+#### (d) Positive linear relationship - y increases as x increase, with the variation/noise introduced by exp
+
+```{r}
+#(e)
+lm(y ~ x)
+summary(lm(y ~ x))
+confint(lm(y~x))
+```
+#### (e)beta-hat are very close to beta
+
+```{r}
+#(f)
+plot(x, y)
+abline(lm(y ~ x), col = "tomato")
+abline(-1, 0.5, col = "green")
+legend("topleft", c("Least square", "Regression"), col = c("tomato", "green"), lty = c(1, 1))
+```
+
+
+```{r}
+#(g)
+lm(y ~ x + I(x^2))
+summary(lm(y ~ x + I(x^2)))
+```
+#### (g) Is there evidence that the quadratic term improves the model fit? - No. Since p-value is >= 0.05.
+
+```{r}
+#(h)
+set.seed(1)
+eps = rnorm(100, sd = 0.125)
+x = rnorm(100)
+y = -1 + 0.5 * x + eps
+plot(x, y)
+summary(lm(y ~ x))
+confint(lm(y ~ x))
+abline(lm(y ~ x), col = "yellow")
+abline(-1, 0.5, col = "purple")
+legend("topleft", c("Least square", "Regression"), col = c("yellow","purple"), lty = c(1, 1))
+```
+#### (h)The noise/variation caused by eps decreased. Beta values are still pretty close, yet the overwall performance turns relationship approximates nearly linear, we have a much higher R^2 and much lower RSE. 
+
+```{r}
+#(i)
+set.seed(1)
+eps = rnorm(100, sd = 0.5)
+x = rnorm(100)
+y = -1 + 0.5 * x + eps
+plot(x, y)
+lm(y ~ x)
+
+abline(lm(y ~ x), col = "orange")
+abline(-1, 0.5, col = "darkblue")
+legend("topleft", c("Least square", "Regression"), col = c("orange","darkblue"), lty = c(1, 1))
+```
+#### (i) The data seem to spread out more, so our leasr sqaure adn regression line no longer fits as close as previous models. Contrary to (h), we now have a much lower R^2 and much higher RS Error. And the relationship between x and y seem less linear.
+
+```{r}
+#(j)
+summary(lm(y ~ x))
+confint(lm(y ~ x))
+```
+### (j)Beta-0 for the three models are: (-1.1150804, -0.9226122), (-1.008805, -0.9639819), (-1.0352203, -0.8559276); and Beat-1 are: (0.3925794,  0.6063602), (0.476387,  0.5233799) and (0.4055479,  0.5935197) in order. The first entry in the tuple is fore the 2.5%, and the latter for 97.5%. We can see taht as the noise increases, the confidence intervals increase. Otherwise if the noise if minialized, we have a much more linear relationship.
+
+
+### Theory
+#### p.g 66
+```
+“This is clearly not true in Fig. 3.1” Explain why.
+
+
+A: Because the author made the statement that - For these formulas to be strictly valid, we need to as- sume that the errors eps-i for each observation are uncorrelated with common variance sigm-2.While in Fig. 3.1 the fit is found by minimizing the sum of squared errors. The error segment on the graph represented by the linear fit's average squares. In this case a linear fit captures the essence of the relationship, which is base on the correlation between sigma and squared errors eps.
+            
+```
+
+#### p.g 77
+```
+On p. 77 the authors state, “In this case we cannot even fit the multiple regression models using least squares ….” Explain why.
+
+A: Because the approach of using an F-statistic to test for any association between the predictors and the response only works when p is relatively small(small compared to n). So if we have a large number of variables which that p > n, then there are more coefficients to estimate than observations from which to estimate them, then least-squares can't serve the purpose due to the high-dimentionality of our data.
+```
+
+#### 3.7.3
+```
+#(a)
+The answer should be iii). It't pretty obvious after fitting the least sqaure line using the beta/coeff given: y-hat = 50 + 20GPA + 0.07IQ + 35Gender + 0.01GPA * IQ − 10GPA * Gender, so if its 1 for felmale and 0 for male, male would earn more on average. 
+
+#(b)
+y-hat = 50 + 20G*4.0 + 0.07*110 + 35*1 + 0.01*4.0 * 110 − 10*4.0 * 1
+      = 85 + 40 + 7.7 + 4.4 
+      = 137.1.
+So the salary predicted would be 137.1k.
+
+#(c)
+False. We should be looking at the p-value associated with the t/f-statistic  order to determine the evidence of the strength of interaaction term, not the coefficient value.
+```
+
+
+#### 3.7.4
+```
+#(a)
+It would be hard to tell without more info. We need more knowledge about the training data in order to specifiy the relationship. But X and Y appear to be linearly related, so there is a big chance that the least squares RSS would be lower than that for the cubic regression since it fits the model better.
+
+#(b)
+It would be hard to tell without more info. We need more knowledge about the training data in order to specifiy the relationship. Still, since X and Y appear to be linearly related, so there is a big chance that the least squares RSS in test would be lower than that for the cubic regression since it fits the model better, and the cubic regression would introduce more error.
+
+#(c)
+If the true relationship between X and Y is not linear, then the higher the flexibility of a model, the better it fits the data and thus has a smaller train RSS. So in our case, the cubic regression RSS will be lower than the least square.
+
+#(d)
+If we were talking about test RSS, then we definitely don't have enough infomation, because we neither know the relationship between X and Y, nor do we know about the test data pattern. The same answer applies from the previous question: depends on which model fits the test data better - if it were linear, then linear regression test RSS is smaller, otherwise the cubic regression RSS would be lower.
+
+```
