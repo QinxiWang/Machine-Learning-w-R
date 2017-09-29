@@ -1,0 +1,55 @@
+# Qinxi Wang
+
+### Task 1
+
+```{r}
+require(mosaicData)
+```
+
+### Task 2
+
+```{r}
+task2 = paste("Today is", date())
+task2
+```
+
+
+### Task 3
+```{r}
+data(Galton)
+(task3a = variable.names(Galton))
+(task3b = length(Galton[,5]))
+(task3c = mean(Galton[,5]))
+```
+
+
+### Task 4
+```{r}
+(task4 = cbind(c(1,4),c(2,5),c(3,6)))
+```
+
+
+### Task 5
+```{r}
+task5x = runif(1000, min = 0, max = 1)
+task5y = runif(1000, min = 0, max = 1)
+
+#for (i in 1:length(task5x)){
+#  task5pi[i] = (task5x[i]^2 + task5y[i]^2)^0.5
+#}
+#task5pi1 = (task5x^2 + task5y^2)^0.5
+#count = 0
+#for (i in 1:length(task5pi1)){
+#  if (task5pi1[i] <= 1){
+#    count = count + 1
+#  }
+#}
+task5pi = pi #count/ length(task5pi1)
+```
+
+
+## Test statements
+
+```{r}
+scoreActivity::score253(1)
+```

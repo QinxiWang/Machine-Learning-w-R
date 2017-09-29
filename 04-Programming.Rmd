@@ -1,0 +1,45 @@
+# In-Class Programming Activity, Day 4
+
+### Task 1
+```{r}
+plot(1, xlim = c(0,100), ylim = c(0,100), type = "n")
+```
+
+### Task 2
+```{r}
+plot(1, xlim = c(0,100), ylim = c(0,100), type = "n")
+x1 = c(1,3,3,1,1)
+y1 = c(1,1,3,3,1)
+x2 = c(1,3,3,1,1)
+y2 = c(1,1,3,3,1)
+lines(x1, y1)
+```
+
+### Task 3
+```{r}
+plot(1, xlim = c(0,100), ylim = c(0,100), type = "n", asp = 1)
+angles = seq(0, 2*pi, length=200)
+x3 = 50+cos(angles) * 20
+y3 = 60+sin(angles) * 20
+lines(x3, y3)
+#draw.circle(5,6,radius = 4,nv=100,border=NULL,col=NA,lty=1,lwd=1)
+```
+
+### Task 4
+```{r}
+x4 = abs(sin(angles)) * 4
+y4 = abs(sin(angles)) * 8
+#polygon(x4, y4)
+```
+
+
+### Task 5
+```{r}
+plot(x1, y2, col = "red", xlab = "custom")
+```
+
+## Test statements
+
+```{r}
+scoreActivity::score253(4)
+```

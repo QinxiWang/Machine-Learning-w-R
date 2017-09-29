@@ -1,0 +1,67 @@
+# In-Class Programming Activity, Day 5
+
+## Taks 1
+```{r}
+library(mosaicData)
+nbins = 10
+```
+
+## Task 2
+```{r}
+mid = length(Galton$height) / 2
+range1 = mid - nbins/2
+range2 = mid + nbins/2
+evenly_spaced = seq(min(Galton$height), max(Galton$height), length=nbins+1)#sort(Galton$height)[range1 : range2]
+```
+
+## Task 3
+```{r}
+bins = cut(Galton$height, breaks = evenly_spaced)
+#cut()
+bin_counts = table(bins)
+```
+
+## Task 4
+```{r}
+xR = evenly_spaced[-1]
+xL = evenly_spaced[-length(evenly_spaced)]
+count = as.numeric(bin_counts)
+hist_basics = data.frame(xR, xL, count)
+```
+
+## Task 5
+```{r}
+make_one_bar <- function(point) {
+  xLeft <- point$xL
+  xRight <- point$xR
+  height <- point$count
+  res <- data.frame(x = c(xLeft,  xLeft,  xRight, xRight, NA),y = c(0, height,height, 0, NA))
+  res
+}
+# ================
+one_to_five <- function(hist_data) {
+  bars <- NULL
+  for (k in 1:nrow(hist_data)) {
+    new_bar <- make_one_bar(hist_data[k, ])
+    bars <- rbind(bars, new_bar)
+  }
+  bars
+}
+
+
+My_bars = one_to_five(hist_basics)
+```
+
+
+## Task 6
+```{r}
+plot(My_bars, type="n") 
+lines(My_bars$x, My_bars$y) 
+polygon(My_bars$x, My_bars$y, col = "tomato")
+```
+
+## Test statements
+
+```{r}
+scoreActivity::score253(5)
+```
