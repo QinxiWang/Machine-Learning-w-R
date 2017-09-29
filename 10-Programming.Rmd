@@ -1,0 +1,63 @@
+# In-Class Programming Activity, Day 10
+```{r}
+library(ISLR)
+```
+
+
+```{r}
+logistic = function(x){
+  return(exp(x)/(1+exp(x)))
+}
+```
+
+```{r}
+linear_combine = function(data, coefs){
+  result = 0
+  for(i in names(coefs)){
+    if (i == "intercept"){
+      result = result + coefs[[i]] 
+    } 
+    else{
+      if(!i %in% names(data)){
+        stop("coef element", i, "not in data table")
+      }
+      result = result + coefs[[i]] * data[[i]]
+    }
+  }
+  return(result)
+}
+```
+
+```{r}
+LL_logistic = function(data, coefs, outcome){
+  res = 0
+  res = linear_combine(data, coefs)
+  res = logistic(res)
+  # One probability for each case
+  Likelihood <- ifelse(outcome, res, 1-res)
+  
+  sum(log(Likelihood))
+}
+
+LL_logistic(data=Default, coefs = c(intercept = 1, income = -0.0001), outcome = Default$default == "Yes")
+
+for_optim <- function(coefs) {
+  LL_logistic(data = Default, coefs = coefs, outcome = Default$default == "Yes")
+}
+
+
+```
+
+```{r}
+best_coefs = optim(c(intercept = 1, income = -0.0000008), for_optim, control = list(fnscale = -1))
+glm(default == "Yes" ~ income, data=Default, family="binomial")
+best_coefs
+```
+
+
+
+## Test statements
+
+```{r}
+scoreActivity::score253(10)
+```

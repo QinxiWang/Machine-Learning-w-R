@@ -1,0 +1,58 @@
+# In-Class Programming Activity, Day 9
+
+
+```{r}
+deck = c(outer((10* 2:14), 1:4, "+"))
+
+suits = function(cards){
+  #suit = NULL
+  #for(c in 1:length(cards)){
+  #  suit[c] = c %% 4
+  #}
+  return(cards %% 10)
+}
+
+ranks = function(cards){
+  return(cards %/% 10)
+}
+```
+
+```{r}
+same = function(cards){
+  return(sd(cards) == 0)
+}
+
+consecutive = function(cards){
+  return((max(cards) - min(cards)) == length(cards)-1)
+}
+
+
+is_flush = function(cards){
+  return(same(suits(cards)))
+}
+
+is_straight = function(cards){
+  return(consecutive(ranks(cards)))
+}
+
+is_pair = function(cards){     #
+  return(max(table(ranks(cards)) == 2))
+}
+
+ 
+is_full_house = function(cards){      #
+  return((max(table(ranks(cards))) == 3) &&  
+           (min(table(ranks(cards))) == 2))
+}
+
+
+is_straight_flush = function(cards){     #
+  return(is_straight(cards) && is_flush(cards))
+}
+```
+
+## Test statements
+
+```{r}
+scoreActivity::score253(9)
+```

@@ -1,0 +1,50 @@
+# In-Class Programming Activity, Day 8
+
+### Task1
+```{r}
+set.seed(1)
+x = runif(10000, 20, 70)
+y = 5 + 3*x + 2*rnorm(length(x))
+(My_data = data.frame(x,y))
+plot(My_data)
+
+LL_line = function(params){ 
+  m = params[1]
+  b = params[2]
+  sigma = params[3]
+  return(sum(log(dnorm(y - (m * x + b), sd = sigma))))
+}
+
+testA = LL_line(c(3,5,2))
+testB = LL_line(c(4,1,10))
+
+starting_params = c(3,4.4,1.86)
+best = optim(starting_params, LL_line, control = list(fnscale = -1))
+```
+
+
+### Task2
+```{r}
+load(url("http://tiny.cc/dcf/Taxi_trips.rda"))
+
+taxi_likelihood = function(arg){
+  base_fare = arg[1]
+  per_mile = arg[2]
+  params = arg[3]
+  waiting_fare = Taxi_trips$fare_amount - (base_fare + per_mile * Taxi_trips$trip_distance)
+  return(sum(log(dexp(waiting_fare, rate = params) + 0.0001)))
+}
+
+
+starting_fare = c(7,2,1)
+(taxi_likelihood(starting_fare))
+best = optim(starting_fare, taxi_likelihood, control = list(fnscale = -1))
+```
+
+
+
+## Test statements
+
+```{r}
+scoreActivity::score253(8)
+```

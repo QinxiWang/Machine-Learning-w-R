@@ -1,0 +1,46 @@
+# In-Class Programming Activity, Day 7
+
+### Q1
+```{r}
+set.seed(1)
+vals = rexp(10, rate=1/100)
+```
+
+###  Q2
+```{r}
+test200 = sum(dexp(vals, rate = 1/200, log = TRUE))
+```
+
+### Q3
+```{r}
+LL_exp = function(rate){ 
+  return(sum(dexp(vals, rate = rate, log = TRUE)))
+}
+```
+
+### Q4
+```{r}
+rates = seq(1/50, 1/200, length = 100)
+```
+
+### Q5
+```{r}
+results = sapply(rates, LL_exp)
+```
+
+### Q6
+```{r}
+plot(results, 1/results)
+```
+
+### Q7
+```{r}
+exp_results = optimize(LL_exp, lower = 1/200, upper = 1/50, maximum = TRUE)
+```
+
+
+## Test statements
+
+```{r}
+scoreActivity::score253(7)
+```
